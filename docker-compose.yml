@@ -1,0 +1,23 @@
+services:
+  postgres:
+    container_name: app-postgres
+    image: kartoza/postgis:15-3.3
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app-dev
+      POSTGRES_MULTIPLE_EXTENSIONS: postgis
+      PGDATA: /.data/postgres
+    volumes:
+      - postgres:/.data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  postgres:
