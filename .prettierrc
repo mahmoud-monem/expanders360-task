@@ -9,9 +9,5 @@
   "importOrder": ["<THIRD_PARTY_MODULES>", "^(@utajir/*)", "^src/*", "^[./]"],
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true,
-  "importOrderParserPlugins": [
-    "decorators-legacy",
-    "classProperties",
-    "typescript"
-  ]
+  "importOrderParserPlugins": ["decorators-legacy", "classProperties", "typescript"]
 }
