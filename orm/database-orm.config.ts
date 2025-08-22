@@ -1,5 +1,6 @@
-import { appConfig } from 'src/common/config/app.config';
-import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
+
+import { appConfig } from "../src/common/config/app.config";
 
 /**
  * Get database config

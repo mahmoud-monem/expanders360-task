@@ -3,17 +3,17 @@
  *
  * @see https://github.com/typeorm/typeorm/issues/8810
  */
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { DataSource, DataSourceOptions } from "typeorm";
 
-import { getDatabaseConfig } from './database-orm.config';
-import { SnakeCaseNamingStrategy } from './strategies/snake-naming.strategy';
+import { getDatabaseConfig } from "./database-orm.config";
+import { SnakeCaseNamingStrategy } from "./strategies/snake-naming.strategy";
 
 const options: DataSourceOptions = {
-  type: 'postgres',
-  entities: ['{apps,libs}/**/*.entity.ts'],
+  type: "postgres",
+  entities: ["src/**/*.entity.ts"],
   synchronize: false,
   namingStrategy: new SnakeCaseNamingStrategy(),
-  migrations: ['{apps,libs}/**/migrations/**/*.ts'],
+  migrations: ["src/**/migrations/**/*.ts"],
   ...getDatabaseConfig(),
 };
 

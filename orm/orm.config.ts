@@ -1,14 +1,14 @@
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 
-import { getDatabaseConfig } from './database-orm.config';
-import { SnakeCaseNamingStrategy } from './strategies/snake-naming.strategy';
+import { getDatabaseConfig } from "./database-orm.config";
+import { SnakeCaseNamingStrategy } from "./strategies/snake-naming.strategy";
 
 /**
  * Initialize orm config
  */
 export const initOrmConfig = (): TypeOrmModuleOptions => {
   return {
-    type: 'postgres',
+    type: "postgres",
     synchronize: false,
     autoLoadEntities: false,
     entities: [],
