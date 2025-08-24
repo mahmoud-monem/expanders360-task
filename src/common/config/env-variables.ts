@@ -1,20 +1,22 @@
-import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { Type } from "class-transformer";
+import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
-import { Environment } from '../constants/environment.enum';
-import { CastStringToBool } from '../decorators/cast-string-to-bool.decorator';
+import { Environment } from "../constants/environment.enum";
+import { CastStringToBool } from "../decorators/cast-string-to-bool.decorator";
 
 /**
  * Environment variables needed for running application
  */
 export class EnvironmentVariables {
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  public APP_PORT: number;
+
+  @IsNotEmpty()
+  @IsString()
+  public APP_HOST: string;
+
   @IsNotEmpty()
   @IsEnum(Environment)
   public NODE_ENV: Environment;
@@ -44,4 +46,28 @@ export class EnvironmentVariables {
   @IsOptional()
   @CastStringToBool()
   public DB_SSL: boolean = false;
+
+  @IsString()
+  @IsOptional()
+  public MONGO_URI: string;
+
+  @IsString()
+  @IsOptional()
+  public JWT_SECRET: string;
+
+  @IsString()
+  @IsOptional()
+  public SMTP_HOST: string;
+
+  @IsString()
+  @IsOptional()
+  public SMTP_PORT: string;
+
+  @IsString()
+  @IsOptional()
+  public SMTP_USER: string;
+
+  @IsString()
+  @IsOptional()
+  public SMTP_PASS: string;
 }

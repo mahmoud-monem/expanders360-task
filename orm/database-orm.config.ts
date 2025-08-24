@@ -1,12 +1,12 @@
-import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
+import { MysqlConnectionOptions } from "typeorm/driver/mysql/MysqlConnectionOptions";
 
 import { appConfig } from "../src/common/config/app.config";
 
 /**
  * Get database config
  */
-export function getDatabaseConfig(): Partial<PostgresConnectionOptions> {
-  const options: Partial<PostgresConnectionOptions> = {};
+export function getDatabaseConfig(): Partial<MysqlConnectionOptions> {
+  const options: Partial<MysqlConnectionOptions> = {};
 
   Object.assign(options, {
     host: appConfig.DB_HOST,
@@ -16,13 +16,10 @@ export function getDatabaseConfig(): Partial<PostgresConnectionOptions> {
     database: appConfig.DB_NAME,
   });
 
-  if (process.env.DB_SSL) {
+  if (appConfig.DB_SSL) {
     Object.assign(options, {
-      ssl: true,
-      extra: {
-        ssl: {
-          rejectUnauthorized: false,
-        },
+      ssl: {
+        rejectUnauthorized: false,
       },
     });
   }

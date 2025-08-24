@@ -10,8 +10,8 @@ export const initOrmConfig = (): TypeOrmModuleOptions => {
   return {
     type: "postgres",
     synchronize: false,
-    autoLoadEntities: false,
-    entities: [],
+    autoLoadEntities: true,
+    entities: ["dist/**/*.entity{.ts,.js}"],
     namingStrategy: new SnakeCaseNamingStrategy(),
     ...getDatabaseConfig(),
   };

@@ -5,19 +5,95 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: app-dev
-      POSTGRES_MULTIPLE_EXTENSIONS: postgis
-      PGDATA: /.data/postgres
-    volumes:
-      - postgres:/.data/postgres
+      POSTGRES_DB: expanders360
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - postgres
+      - expanders360-network
 
-networks:
-  postgres:
-    driver: bridge
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: expanders360-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin_password
+      MONGO_INITDB_DATABASE: expanders360
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongodb/init.js:/docker-entrypoint-initdb.d/init.js:ro
+    networks:
+      - expanders360-network
+
+  # Redis (for Bull queues and caching)
+  redis:
+    image: redis:7.2-alpine
+    container_name: expanders360-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - expanders360-network
+
+  # NestJS Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: expanders360-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: expanders_user
+      DB_PASSWORD: expanders_password
+      DB_NAME: expanders360
+      MONGO_URI: mongodb://admin:admin_password@mongodb:27017/expanders360?authSource=admin
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - expanders360-network
+
+  # Optional: MongoDB Express for database management
+  mongo-express:
+    image: mongo-express:latest
+    container_name: expanders360-mongo-express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin_password
+      ME_CONFIG_MONGODB_URL: mongodb://admin:admin_password@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongodb
+    networks:
+      - expanders360-network
 
 volumes:
-  postgres:
+  mongodb_data:
+  redis_data:
+  postgres_data:
+
+networks:
+  expanders360-network:
+    driver: bridge
