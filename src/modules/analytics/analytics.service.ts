@@ -28,7 +28,6 @@ export class AnalyticsService {
   ) {}
 
   async getTopVendorsByCountry(): Promise<TopVendorAnalytics[]> {
-    // Get all unique countries from projects
     const countries = await this.getUniqueCountries();
 
     const analytics: TopVendorAnalytics[] = [];
@@ -54,16 +53,16 @@ export class AnalyticsService {
   }
 
   private async getTopVendorsForCountry(country: string): Promise<{ vendor: Vendor; averageScore: number }[]> {
-    // Get all vendors that support this country
     const vendors = await this.vendorRepository
       .createQueryBuilder("vendor")
-      .where("JSON_CONTAINS(vendor.countries_supported, :country)", { country: JSON.stringify(country) })
+      .leftJoinAndSelect("vendor.supportedCountries", "supportedCountry")
+      .where("supportedCountry.name = :country", { country })
       .getMany();
 
     const vendorScores: { vendor: Vendor; averageScore: number }[] = [];
 
     for (const vendor of vendors) {
-      const averageScore = await this.matchService.getAverageScoreByVendorAndCountry(vendor.id, country, 30);
+      const averageScore = await this.getAverageScoreForVendorInCountry(vendor.id, country);
 
       if (averageScore > 0) {
         vendorScores.push({
@@ -73,12 +72,10 @@ export class AnalyticsService {
       }
     }
 
-    // Sort by average score descending and take top 3
     return vendorScores.sort((a, b) => b.averageScore - a.averageScore).slice(0, 3);
   }
 
   private async getResearchDocumentCountForCountry(country: string): Promise<number> {
-    // This requires cross-DB query: find projects in this country, then count research documents for those projects
     const projects = await this.projectService.findAll();
     const projectsInCountry = projects.filter(project => project.country.name === country);
     const projectIds = projectsInCountry.map(project => project.id);
@@ -90,6 +87,23 @@ export class AnalyticsService {
     return this.researchDocumentModel.countDocuments({
       projectId: { $in: projectIds },
     });
+  }
+
+  private async getAverageScoreForVendorInCountry(vendorId: number, country: string): Promise<number> {
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+
+    const matches = await this.matchService.findByVendor(vendorId);
+    const recentMatches = matches.filter(match => {
+      return match.createdAt >= since && match.project && match.project.country && match.project.country.name === country;
+    });
+
+    if (recentMatches.length === 0) {
+      return 0;
+    }
+
+    const totalScore = recentMatches.reduce((sum, match) => sum + match.score, 0);
+    return Math.round((totalScore / recentMatches.length) * 100) / 100;
   }
 
   async getVendorPerformanceMetrics(vendorId: number, days: number = 30): Promise<any> {
