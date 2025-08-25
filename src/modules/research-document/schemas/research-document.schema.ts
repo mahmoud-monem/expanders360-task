@@ -17,6 +17,18 @@ export class ResearchDocument {
   @Prop({ required: true })
   projectId: number;
 
+  @Prop({ required: false })
+  fileUrl?: string;
+
+  @Prop({ required: false })
+  fileName?: string;
+
+  @Prop({ required: false })
+  fileSize?: number;
+
+  @Prop({ required: false })
+  mimeType?: string;
+
   @Prop()
   createdAt: Date;
 

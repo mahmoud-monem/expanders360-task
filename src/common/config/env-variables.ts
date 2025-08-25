@@ -70,4 +70,24 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   public SMTP_PASS: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public S3_ENDPOINT: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public S3_REGION: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public S3_ACCESS_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public S3_SECRET_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public S3_BUCKET_NAME: string;
 }

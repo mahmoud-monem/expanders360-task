@@ -29,10 +29,11 @@
     "seed:run": "typeorm-ts-node-commonjs -d orm/orm-seed.config.ts migration:run",
     "seed:show": "npm run typeorm:seed migration:show",
     "reset:db": "npm run schema:drop && npm run schema:load && npm run migration:run:fake",
-    "load:local:containers": "docker compose up -d postgres mongodb redis",
-    "drop:local:containers": "docker compose down -v --remove-orphans mysql mongodb redis"
+    "load:local:containers": "docker compose up -d postgres mongodb redis minio minio-init",
+    "drop:local:containers": "docker compose down -v --remove-orphans postgres mongodb redis minio minio-init"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.873.0",
     "@nestjs/bull": "^11.0.3",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
@@ -43,12 +44,14 @@
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/typeorm": "^11.0.0",
+    "@types/multer": "^2.0.0",
     "bcryptjs": "^3.0.2",
     "bull": "^4.16.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "dotenv-expand": "^12.0.2",
     "mongoose": "^8.18.0",
+    "multer": "^2.0.2",
     "nest-winston": "^1.10.2",
     "nestjs-typeorm-paginate": "^4.1.0",
     "nodemailer": "^7.0.5",

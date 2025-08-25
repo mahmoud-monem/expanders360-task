@@ -7,6 +7,7 @@ import { appConfig } from "./common/config/app.config";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CountryModule } from "./modules/country/country.module";
 import { ProjectModule } from "./modules/project/project.module";
+import { ResearchDocumentModule } from "./modules/research-document/research-document.module";
 import { UserModule } from "./modules/user/user.module";
 import { VendorModule } from "./modules/vendor/vendor.module";
 
@@ -25,6 +26,7 @@ import { VendorModule } from "./modules/vendor/vendor.module";
     CountryModule,
     VendorModule,
     ProjectModule,
+    ResearchDocumentModule,
   ],
 })
 export class AppModule {}

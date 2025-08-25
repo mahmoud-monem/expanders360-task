@@ -60,12 +60,18 @@ services:
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_BUCKET_NAME: research-documents
+      S3_REGION: us-east-1
     ports:
       - "3000:3000"
     depends_on:
       - postgres
       - mongodb
       - redis
+      - minio
     volumes:
       - ./logs:/app/logs
     networks:
@@ -89,10 +95,49 @@ services:
     networks:
       - expanders360-network
 
+  # S3 compatible storage service
+  minio:
+    image: minio/minio:latest
+    container_name: expanders360-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - expanders360-network
+
+  # MinIO initialization service
+  minio-init:
+    image: minio/mc:latest
+    container_name: expanders360-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./docker/minio/init.sh:/init.sh
+    entrypoint: >
+      /bin/sh -c "
+      chmod +x /init.sh &&
+      /init.sh
+      "
+    networks:
+      - expanders360-network
 volumes:
   mongodb_data:
   redis_data:
   postgres_data:
+  minio_data:
 
 networks:
   expanders360-network:
