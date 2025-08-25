@@ -29,7 +29,7 @@ export const DEFAULT_PER_PAGE = 10;
  *   public limit: number = MY_DEFAULT_VALUE;
  *  } ```
  */
-export class PaginationQueryInputDto {
+export class PaginationQueryDto {
   @ApiPropertyOptional({
     description: "The current page",
     example: "1",
