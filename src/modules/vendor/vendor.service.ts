@@ -1,32 +1,68 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Pagination } from "nestjs-typeorm-paginate";
+import { In, Repository } from "typeorm";
 
-import { ServiceType } from "../project/constants/service-type.enum";
-import { CreateVendorDto } from "./dto/create-vendor.dto";
-import { UpdateVendorDto } from "./dto/update-vendor.dto";
+import { Country } from "../country/entities/country.entity";
+import { CreateVendorDto } from "./dtos/create-vendor.dto";
+import { GetVendorsPaginatedListQueryDto } from "./dtos/get-vendors-paginated-list.query.dto";
+import { UpdateVendorDto } from "./dtos/update-vendor.dto";
 import { Vendor } from "./entities/vendor.entity";
+import { VendorRepository } from "./repositories/vendor.repository";
 
 @Injectable()
 export class VendorService {
-  constructor(@InjectRepository(Vendor) private readonly vendorRepository: Repository<Vendor>) {}
+  constructor(
+    private readonly vendorRepository: VendorRepository,
+    @InjectRepository(Country) private readonly countryRepository: Repository<Country>,
+  ) {}
 
   async create(createVendorDto: CreateVendorDto): Promise<Vendor> {
-    const vendor = this.vendorRepository.create(createVendorDto);
+    const supportedCountries = await this.countryRepository.find({
+      where: { id: In(createVendorDto.supportedCountryIds) },
+    });
+
+    if (supportedCountries.length !== createVendorDto.supportedCountryIds.length) {
+      throw new NotFoundException("Some countries not found");
+    }
+
+    const vendor = this.vendorRepository.create({
+      ...createVendorDto,
+      supportedCountries,
+    });
+
     return this.vendorRepository.save(vendor);
   }
 
-  async findAll(): Promise<Vendor[]> {
-    return this.vendorRepository.find({
-      relations: ["matches"],
-    });
+  async getVendorsPaginatedList(query: GetVendorsPaginatedListQueryDto): Promise<Pagination<Vendor>> {
+    return this.vendorRepository.getVendorsPaginatedList(query);
   }
 
-  async findOne(id: number): Promise<Vendor> {
-    const vendor = await this.vendorRepository.findOne({
-      where: { id },
-      relations: ["matches"],
-    });
+  async getVendorDetails(id: number): Promise<Vendor> {
+    return this.validateVendorExistence(id);
+  }
+
+  async update(id: number, updateVendorDto: UpdateVendorDto): Promise<Vendor> {
+    const [vendor, supportedCountries] = await Promise.all([
+      this.validateVendorExistence(id),
+      this.validateSupportedCountriesExistence(updateVendorDto.supportedCountryIds),
+    ]);
+
+    Object.assign(vendor, { ...updateVendorDto, supportedCountries });
+
+    return this.vendorRepository.save(vendor);
+  }
+
+  async remove(id: number): Promise<{ message: string }> {
+    await this.validateVendorExistence(id);
+
+    await this.vendorRepository.delete(id);
+
+    return { message: "Vendor deleted successfully" };
+  }
+
+  private async validateVendorExistence(id: number): Promise<Vendor> {
+    const vendor = await this.vendorRepository.getVendorDetails(id);
 
     if (!vendor) {
       throw new NotFoundException(`Vendor with ID ${id} not found`);
@@ -35,22 +71,15 @@ export class VendorService {
     return vendor;
   }
 
-  async findByCountryAndServices(country: string, services: ServiceType[]): Promise<Vendor[]> {
-    return this.vendorRepository
-      .createQueryBuilder("vendor")
-      .where("JSON_CONTAINS(vendor.countries_supported, :country)", { country: JSON.stringify(country) })
-      .andWhere("JSON_OVERLAPS(vendor.services_offered, :services)", { services: JSON.stringify(services) })
-      .getMany();
-  }
+  private async validateSupportedCountriesExistence(supportedCountryIds: number[]): Promise<Country[]> {
+    const supportedCountries = await this.countryRepository.find({
+      where: { id: In(supportedCountryIds) },
+    });
 
-  async update(id: number, updateVendorDto: UpdateVendorDto): Promise<Vendor> {
-    const vendor = await this.findOne(id);
-    Object.assign(vendor, updateVendorDto);
-    return this.vendorRepository.save(vendor);
-  }
+    if (supportedCountries.length !== supportedCountryIds.length) {
+      throw new NotFoundException("Some countries not found");
+    }
 
-  async remove(id: number): Promise<void> {
-    const vendor = await this.findOne(id);
-    await this.vendorRepository.remove(vendor);
+    return supportedCountries;
   }
 }

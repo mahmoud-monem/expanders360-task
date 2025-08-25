@@ -1,9 +1,9 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory, Reflector } from "@nestjs/core";
+import { NestExpressApplication } from "@nestjs/platform-express";
 
 import { AppModule } from "./app.module";
 import { appConfig } from "./common/config/app.config";
-import { ApiValidationError } from "./common/errors/api-validation.error";
 import { createLogger } from "./common/utils/create-logger";
 import { setupSwagger } from "./common/utils/setup-swagger";
 import { JwtAuthGuard } from "./modules/auth/guards/jwt-auth.guard";
@@ -20,9 +20,11 @@ async function bootstrap() {
     useOriginalNestLogFormat: true,
   });
 
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger,
   });
+
+  app.set("query parser", "extended");
 
   app.setGlobalPrefix("api");
 
@@ -30,7 +32,6 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
-      exceptionFactory: errors => new ApiValidationError(errors),
     }),
   );
 

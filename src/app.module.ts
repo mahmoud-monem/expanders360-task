@@ -7,6 +7,7 @@ import { appConfig } from "./common/config/app.config";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CountryModule } from "./modules/country/country.module";
 import { UserModule } from "./modules/user/user.module";
+import { VendorModule } from "./modules/vendor/vendor.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UserModule } from "./modules/user/user.module";
     AuthModule,
     UserModule,
     CountryModule,
+    VendorModule,
   ],
 })
 export class AppModule {}
