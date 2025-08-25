@@ -1,7 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
-import { Client } from "../../client/entities/client.entity";
+import { Country } from "../../country/entities/country.entity";
 import { Match } from "../../match/entities/match.entity";
+import { User } from "../../user/entities/user.entity";
 import { ProjectStatus } from "../constants/project-status.enum";
 import { ServiceType } from "../constants/service-type.enum";
 
@@ -10,14 +11,14 @@ export class Project {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column("int")
+  @Column("int4")
   clientId: number;
 
-  @Column("varchar")
-  country: string;
+  @Column("int4")
+  countryId: number;
 
-  @Column("json")
-  servicesNeeded: ServiceType[];
+  @Column("enum", { enum: ServiceType, array: true, enumName: "service_type_enum" })
+  neededServices: ServiceType[];
 
   @Column("decimal", { precision: 15, scale: 2 })
   budget: number;
@@ -25,9 +26,18 @@ export class Project {
   @Column("enum", { enum: ProjectStatus, default: ProjectStatus.Pending })
   status: ProjectStatus;
 
-  @ManyToOne(() => Client, client => client.projects)
+  @CreateDateColumn()
+  createdAt: Date;
+
+  // Relations
+
+  @ManyToOne(() => User, { onDelete: "CASCADE", onUpdate: "CASCADE" })
   @JoinColumn({ name: "client_id" })
-  client: Client;
+  client: User;
+
+  @ManyToOne(() => Country)
+  @JoinColumn({ name: "country_id" })
+  country: Country;
 
   @OneToMany(() => Match, match => match.project)
   matches: Match[];

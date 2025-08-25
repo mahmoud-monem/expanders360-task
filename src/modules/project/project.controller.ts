@@ -1,62 +1,66 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+
+import { ApiAuth } from "src/common/decorators/api-auth.decorator";
+import { MessageResponseDto } from "src/common/dtos/message.response.dto";
+import { Serialize } from "src/common/interceptors/serialize.interceptor";
 
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
-import { Roles } from "../auth/decorators/roles.decorator";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import { UserRole } from "../user/constants/user-role.enum";
 import { User } from "../user/entities/user.entity";
-import { CreateProjectDto } from "./dto/create-project.dto";
-import { UpdateProjectDto } from "./dto/update-project.dto";
+import { CreateProjectDto } from "./dtos/create-project.dto";
+import { GetProjectsPaginatedListQueryDto } from "./dtos/get-projects-paginated-list.query.dto";
+import { GetProjectsPaginatedListResponseDto } from "./dtos/get-projects-paginated-list.response.dto";
+import { ProjectResponseDto } from "./dtos/project.response.dto";
+import { UpdateProjectDto } from "./dtos/update-project.dto";
 import { ProjectService } from "./project.service";
 
+@ApiTags("Project")
 @Controller("projects")
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Post()
-  @Roles(UserRole.Admin, UserRole.Client)
+  @ApiAuth()
+  @ApiOperation({ summary: "Create a new project" })
+  @ApiOkResponse({ type: ProjectResponseDto })
+  @Serialize(ProjectResponseDto)
   create(@Body() createProjectDto: CreateProjectDto, @CurrentUser() user: User) {
-    // Additional logic needed to ensure clients can only create for themselves
+    createProjectDto.clientId = user.id;
     return this.projectService.create(createProjectDto);
   }
 
   @Get()
-  @Roles(UserRole.Admin)
-  findAll() {
-    return this.projectService.findAll();
-  }
-
-  @Get("client/:clientId")
-  @Roles(UserRole.Admin, UserRole.Client)
-  findByClient(@Param("clientId") clientId: string, @CurrentUser() user: User) {
-    // Additional logic needed to ensure clients can only access their own projects
-    return this.projectService.findByClient(+clientId);
-  }
-
-  @Get("active")
-  @Roles(UserRole.Admin)
-  findActiveProjects() {
-    return this.projectService.findActiveProjects();
+  @ApiAuth()
+  @ApiOperation({ summary: "Get projects paginated list" })
+  @ApiOkResponse({ type: GetProjectsPaginatedListResponseDto })
+  @Serialize(GetProjectsPaginatedListResponseDto)
+  getProjectsPaginatedList(@Query() query: GetProjectsPaginatedListQueryDto) {
+    return this.projectService.getProjectsPaginatedList(query);
   }
 
   @Get(":id")
-  @Roles(UserRole.Admin, UserRole.Client)
-  findOne(@Param("id") id: string, @CurrentUser() user: User) {
-    // Additional logic needed to ensure clients can only access their own projects
-    return this.projectService.findOne(+id);
+  @ApiAuth()
+  @ApiOperation({ summary: "Get project details" })
+  @ApiOkResponse({ type: ProjectResponseDto })
+  @Serialize(ProjectResponseDto)
+  getProjectDetails(@Param("id") id: string) {
+    return this.projectService.getProjectDetails(+id);
   }
 
-  @Patch(":id")
-  @Roles(UserRole.Admin, UserRole.Client)
-  update(@Param("id") id: string, @Body() updateProjectDto: UpdateProjectDto, @CurrentUser() user: User) {
-    // Additional logic needed to ensure clients can only update their own projects
+  @Put(":id")
+  @ApiAuth()
+  @ApiOperation({ summary: "Update project" })
+  @ApiOkResponse({ type: ProjectResponseDto })
+  @Serialize(ProjectResponseDto)
+  update(@Param("id") id: string, @Body() updateProjectDto: UpdateProjectDto) {
     return this.projectService.update(+id, updateProjectDto);
   }
 
   @Delete(":id")
-  @Roles(UserRole.Admin)
+  @ApiAuth()
+  @ApiOperation({ summary: "Delete project" })
+  @ApiOkResponse({ type: MessageResponseDto })
+  @Serialize(MessageResponseDto)
   remove(@Param("id") id: string) {
     return this.projectService.remove(+id);
   }

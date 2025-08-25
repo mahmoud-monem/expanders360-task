@@ -6,6 +6,7 @@ import { initOrmConfig } from "orm/orm.config";
 import { appConfig } from "./common/config/app.config";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CountryModule } from "./modules/country/country.module";
+import { ProjectModule } from "./modules/project/project.module";
 import { UserModule } from "./modules/user/user.module";
 import { VendorModule } from "./modules/vendor/vendor.module";
 
@@ -23,6 +24,7 @@ import { VendorModule } from "./modules/vendor/vendor.module";
     UserModule,
     CountryModule,
     VendorModule,
+    ProjectModule,
   ],
 })
 export class AppModule {}

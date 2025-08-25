@@ -49,7 +49,7 @@ export class AnalyticsService {
 
   private async getUniqueCountries(): Promise<string[]> {
     const projects = await this.projectService.findAll();
-    const countries = [...new Set(projects.map(project => project.country))];
+    const countries = [...new Set(projects.map(project => project.country.name))];
     return countries;
   }
 
@@ -80,7 +80,7 @@ export class AnalyticsService {
   private async getResearchDocumentCountForCountry(country: string): Promise<number> {
     // This requires cross-DB query: find projects in this country, then count research documents for those projects
     const projects = await this.projectService.findAll();
-    const projectsInCountry = projects.filter(project => project.country === country);
+    const projectsInCountry = projects.filter(project => project.country.name === country);
     const projectIds = projectsInCountry.map(project => project.id);
 
     if (projectIds.length === 0) {

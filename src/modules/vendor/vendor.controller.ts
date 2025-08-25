@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 
 import { ApiAuth } from "src/common/decorators/api-auth.decorator";
@@ -31,8 +31,7 @@ export class VendorController {
   @ApiOperation({ summary: "Get vendors paginated list" })
   @ApiOkResponse({ type: GetVendorsPaginatedListResponseDto })
   @Serialize(GetVendorsPaginatedListResponseDto)
-  getVendorsPaginatedList(@Query() query: GetVendorsPaginatedListQueryDto, @Req() req: any) {
-    console.log(req.query);
+  getVendorsPaginatedList(@Query() query: GetVendorsPaginatedListQueryDto) {
     return this.vendorService.getVendorsPaginatedList(query);
   }
 
