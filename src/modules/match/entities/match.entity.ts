@@ -20,11 +20,11 @@ export class Match {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => Project, project => project.matches)
+  @ManyToOne(() => Project, project => project.matches, { onDelete: "CASCADE", onUpdate: "CASCADE" })
   @JoinColumn({ name: "project_id" })
   project: Project;
 
-  @ManyToOne(() => Vendor, vendor => vendor.matches)
+  @ManyToOne(() => Vendor, vendor => vendor.matches, { onDelete: "CASCADE", onUpdate: "CASCADE" })
   @JoinColumn({ name: "vendor_id" })
   vendor: Vendor;
 }

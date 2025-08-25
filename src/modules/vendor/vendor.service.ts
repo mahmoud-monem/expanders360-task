@@ -61,6 +61,10 @@ export class VendorService {
     return { message: "Vendor deleted successfully" };
   }
 
+  async findVendorsForMatching(countryId: number, neededServices: string[]): Promise<Vendor[]> {
+    return this.vendorRepository.findVendorsForMatching(countryId, neededServices);
+  }
+
   private async validateVendorExistence(id: number): Promise<Vendor> {
     const vendor = await this.vendorRepository.getVendorDetails(id);
 

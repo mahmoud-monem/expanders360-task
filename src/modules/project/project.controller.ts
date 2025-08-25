@@ -10,6 +10,7 @@ import { User } from "../user/entities/user.entity";
 import { CreateProjectDto } from "./dtos/create-project.dto";
 import { GetProjectsPaginatedListQueryDto } from "./dtos/get-projects-paginated-list.query.dto";
 import { GetProjectsPaginatedListResponseDto } from "./dtos/get-projects-paginated-list.response.dto";
+import { ProjectMatchesResponseDto } from "./dtos/project-matches.response.dto";
 import { ProjectResponseDto } from "./dtos/project.response.dto";
 import { UpdateProjectDto } from "./dtos/update-project.dto";
 import { ProjectService } from "./project.service";
@@ -63,5 +64,14 @@ export class ProjectController {
   @Serialize(MessageResponseDto)
   remove(@Param("id") id: string) {
     return this.projectService.remove(+id);
+  }
+
+  @Post(":id/matches/rebuild")
+  @ApiAuth()
+  @ApiOperation({ summary: "Rebuild vendor matches for project" })
+  @ApiOkResponse({ type: ProjectMatchesResponseDto })
+  @Serialize(ProjectMatchesResponseDto)
+  rebuildMatches(@Param("id") id: string) {
+    return this.projectService.rebuildMatches(+id);
   }
 }

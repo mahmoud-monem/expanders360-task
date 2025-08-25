@@ -13,5 +13,6 @@ import { VendorService } from "./vendor.service";
   imports: [TypeOrmModule.forFeature([Vendor, Country])],
   controllers: [VendorController],
   providers: [VendorService, provideCustomRepository(Vendor, VendorRepository)],
+  exports: [VendorService],
 })
 export class VendorModule {}

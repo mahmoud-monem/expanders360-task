@@ -33,6 +33,14 @@ export class VendorRepository extends PaginatedRepository<Vendor> {
     }
   }
 
+  async findVendorsForMatching(countryId: number, neededServices: string[]): Promise<Vendor[]> {
+    return this.createQueryBuilder("vendor")
+      .leftJoinAndSelect("vendor.supportedCountries", "supportedCountry")
+      .where("supportedCountry.id = :countryId", { countryId })
+      .andWhere("vendor.offeredServices && :neededServices", { neededServices })
+      .getMany();
+  }
+
   private getBaseQuery() {
     return this.createQueryBuilder("vendor").leftJoinAndSelect("vendor.supportedCountries", "supportedCountry");
   }
