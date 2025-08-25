@@ -31,7 +31,15 @@
     "seed:data": "ts-node -r tsconfig-paths/register src/common/seeds/seed.ts",
     "reset:db": "npm run schema:drop && npm run schema:load && npm run migration:run:fake",
     "load:local:containers": "docker compose up -d postgres mongodb redis minio minio-init",
-    "drop:local:containers": "docker compose down -v --remove-orphans postgres mongodb redis minio minio-init"
+    "drop:local:containers": "docker compose down -v --remove-orphans postgres mongodb redis minio minio-init",
+    "deploy:dev": "./scripts/deploy.sh development",
+    "deploy:prod": "./scripts/deploy.sh production",
+    "test:api": "node test-endpoints.js",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:restart": "docker compose restart app",
+    "health:check": "curl -f http://localhost:3000/api/health || echo 'Health check failed'"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.873.0",

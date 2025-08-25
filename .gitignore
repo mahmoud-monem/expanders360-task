@@ -54,3 +54,39 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Docker volumes and data
+docker-data/
+postgres-data/
+mongodb-data/
+redis-data/
+minio-data/
+
+# SSL certificates (add if using HTTPS)
+nginx/ssl/
+*.pem
+*.key
+*.crt
+
+# Production environment overrides
+.env.production
+.env.staging
+
+# Application logs
+logs/
+*.log
+
+# Backup files
+*.backup
+*.bak
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Coverage reports
+coverage/
+
+# Temporary files
+*.tmp
+*.temp

@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: expanders360-config
+  namespace: expanders360
+data:
+  NODE_ENV: "production"
+  APP_PORT: "3000"
+  APP_HOST: "0.0.0.0"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "expanders360"
+  DB_SSL: "true"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  S3_ENDPOINT: "http://minio-service:9000"
+  S3_REGION: "us-east-1"
+  S3_BUCKET_NAME: "research-documents"
+  SMTP_PORT: "587"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: expanders360-secrets
+  namespace: expanders360
+type: Opaque
+data:
+  # Base64 encoded values - replace with your actual secrets
+  DB_USERNAME: cG9zdGdyZXM= # postgres
+  DB_PASSWORD: c2VjdXJlLXBhc3N3b3Jk # secure-password
+  JWT_SECRET: eW91ci1zdXBlci1zZWN1cmUtand0LXNlY3JldA== # your-super-secure-jwt-secret
+  MONGO_URI: bW9uZ29kYjovL2FkbWluOnNlY3VyZS1wYXNzd29yZEBtb25nb2RiLXNlcnZpY2U6MjcwMTcvZXhwYW5kZXJzMzYwP2F1dGhTb3VyY2U9YWRtaW4= # mongodb://admin:secure-password@mongodb-service:27017/expanders360?authSource=admin
+  S3_ACCESS_KEY: bWluaW9hZG1pbg== # minioadmin
+  S3_SECRET_KEY: bWluaW9hZG1pbjEyMw== # minioadmin123
+  SMTP_HOST: c210cC5nbWFpbC5jb20= # smtp.gmail.com
+  SMTP_USER: eW91ci1lbWFpbEBnbWFpbC5jb20= # your-email@gmail.com
+  SMTP_PASS: eW91ci1hcHAtcGFzc3dvcmQ= # your-app-password
+  ADMIN_EMAIL: YWRtaW5AZXhwYW5kZXJzMzYwLmNvbQ== # admin@expanders360.com
