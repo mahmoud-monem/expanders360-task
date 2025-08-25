@@ -13,6 +13,8 @@ export class CreateUserTable1756079069091 implements MigrationInterface {
       "password" character varying NOT NULL,
       "role" "public"."users_role_enum" NOT NULL DEFAULT 'client',
       "status" "public"."users_status_enum" NOT NULL DEFAULT 'active',
+      "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+      "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
       CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"),
       CONSTRAINT "users_id_pkey" PRIMARY KEY ("id")
     )`);

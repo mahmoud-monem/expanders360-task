@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 import { UserRole } from "../constants/user-role.enum";
 import { UserStatus } from "../constants/user-status.enum";
@@ -22,4 +22,10 @@ export class User {
 
   @Column("enum", { enum: UserStatus, default: UserStatus.Active })
   status: UserStatus;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
