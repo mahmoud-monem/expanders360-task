@@ -6,10 +6,11 @@ import { request } from "express";
 import { PUBLIC_ROUTE_KEY, PublicRouteMetadata } from "src/common/decorators/public-route.decorator";
 import { User } from "src/modules/user/entities/user.entity";
 
+import { AuthStrategy } from "../constants/auth-strategy.enum";
 import { ROLES_KEY } from "../decorators/roles.decorator";
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard("jwt") {
+export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {
   constructor(private readonly reflector: Reflector) {
     super();
   }
@@ -26,6 +27,8 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     const handler = context.getHandler();
 
     if (this.isPublicRoute(handler)) return true;
+
+    await super.canActivate(context);
 
     const isAllowed = this.checkRole(handler);
 

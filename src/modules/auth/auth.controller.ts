@@ -13,24 +13,18 @@ import { RegisterDto } from "./dtos/register.dto";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: "Register a user" })
-  @ApiCreatedResponse({
-    description: "The user has been successfully registered",
-    type: AuthenticatedUserResponseDto,
-  })
   @Post("register")
+  @ApiOperation({ summary: "Register a user" })
+  @ApiCreatedResponse({ type: AuthenticatedUserResponseDto })
   @PublicRoute()
   @Serialize(AuthenticatedUserResponseDto)
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
-  @ApiOperation({ summary: "Login a user" })
-  @ApiOkResponse({
-    description: "The user has been successfully logged in",
-    type: AuthenticatedUserResponseDto,
-  })
   @Post("login")
+  @ApiOperation({ summary: "Login a user" })
+  @ApiOkResponse({ type: AuthenticatedUserResponseDto })
   @PublicRoute()
   @Serialize(AuthenticatedUserResponseDto)
   async login(@Body() loginDto: LoginDto) {
