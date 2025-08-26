@@ -1,7 +1,6 @@
 import { ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
-import { request } from "express";
 
 import { PUBLIC_ROUTE_KEY, PublicRouteMetadata } from "src/common/decorators/public-route.decorator";
 import { User } from "src/modules/user/entities/user.entity";
@@ -30,7 +29,7 @@ export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {
 
     await super.canActivate(context);
 
-    const isAllowed = this.checkRole(handler);
+    const isAllowed = this.checkRole(handler, context);
 
     if (!isAllowed) {
       throw new ForbiddenException("You are not authorized to access this resource");
@@ -39,16 +38,18 @@ export class JwtAuthGuard extends AuthGuard(AuthStrategy.JWT) {
     return true;
   }
 
-  private checkRole(handler: Function): boolean {
-    const metadata = this.reflector.get(ROLES_KEY, handler);
+  private checkRole(handler: Function, context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.get(ROLES_KEY, handler);
 
-    if (!metadata) {
+    if (!requiredRoles) {
       return true;
     }
 
-    const requiredRoles = metadata.roles;
+    const user = context.switchToHttp().getRequest().user as User;
 
-    return requiredRoles.some((role: string) => (request.user as User).role === role);
+    console.log(user, requiredRoles);
+
+    return requiredRoles.some((role: string) => user.role === role);
   }
 
   /**

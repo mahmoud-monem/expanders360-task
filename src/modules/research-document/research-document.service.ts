@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 
 import { StorageService } from "src/common/services/storage.service";
 
+import { Project } from "../project/entities/project.entity";
+import { UserRole } from "../user/constants/user-role.enum";
+import { User } from "../user/entities/user.entity";
 import { CreateResearchDocumentDto } from "./dtos/create-research-document.dto";
 import { GetResearchDocumentsPaginatedListQueryDto } from "./dtos/get-research-documents-paginated-list.query.dto";
 import { UpdateResearchDocumentDto } from "./dtos/update-research-document.dto";
@@ -13,9 +18,19 @@ export class ResearchDocumentService {
   constructor(
     private readonly researchDocumentRepository: ResearchDocumentRepository,
     private readonly storageService: StorageService,
+    @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
   ) {}
 
-  async create(createResearchDocumentDto: CreateResearchDocumentDto, file?: Express.Multer.File): Promise<ResearchDocument> {
+  async create(
+    createResearchDocumentDto: CreateResearchDocumentDto,
+    file?: Express.Multer.File,
+    user?: User,
+  ): Promise<ResearchDocument> {
+    // If user is client, validate they own the project
+    if (user && user.role === UserRole.Client) {
+      await this.validateProjectOwnership(createResearchDocumentDto.projectId, user);
+    }
+
     let fileData = {};
 
     if (file) {
@@ -40,12 +55,26 @@ export class ResearchDocumentService {
 
   async getResearchDocumentsPaginatedList(
     query: GetResearchDocumentsPaginatedListQueryDto,
+    user?: User,
   ): Promise<PaginatedResult<ResearchDocument>> {
-    return this.researchDocumentRepository.getResearchDocumentsPaginatedList(query);
+    // If user is client, we need to pass their user ID to the repository
+    // so it can filter documents by projects they own
+    let clientId: number | undefined;
+    if (user && user.role === UserRole.Client) {
+      clientId = user.id;
+    }
+    return this.researchDocumentRepository.getResearchDocumentsPaginatedList(query, clientId);
   }
 
-  async getResearchDocumentDetails(id: string): Promise<ResearchDocument> {
-    return this.validateResearchDocumentExistence(id);
+  async getResearchDocumentDetails(id: string, user?: User): Promise<ResearchDocument> {
+    const document = await this.validateResearchDocumentExistence(id);
+
+    // If user is client, validate they own the project this document belongs to
+    if (user && user.role === UserRole.Client) {
+      await this.validateProjectOwnership(document.projectId, user);
+    }
+
+    return document;
   }
 
   async findAll(): Promise<ResearchDocument[]> {
@@ -74,8 +103,14 @@ export class ResearchDocumentService {
     id: string,
     updateResearchDocumentDto: UpdateResearchDocumentDto,
     file?: Express.Multer.File,
+    user?: User,
   ): Promise<ResearchDocument> {
     const existingDocument = await this.validateResearchDocumentExistence(id);
+
+    // If user is client, validate they own the project this document belongs to
+    if (user && user.role === UserRole.Client) {
+      await this.validateProjectOwnership(existingDocument.projectId, user);
+    }
 
     let fileData = {};
 
@@ -114,8 +149,13 @@ export class ResearchDocumentService {
     return document;
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string, user?: User): Promise<{ message: string }> {
     const document = await this.validateResearchDocumentExistence(id);
+
+    // If user is client, validate they own the project this document belongs to
+    if (user && user.role === UserRole.Client) {
+      await this.validateProjectOwnership(document.projectId, user);
+    }
 
     if (document.fileUrl) {
       try {
@@ -143,6 +183,20 @@ export class ResearchDocumentService {
     }
 
     return document;
+  }
+
+  private async validateProjectOwnership(projectId: number, user: User): Promise<void> {
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project with ID ${projectId} not found`);
+    }
+
+    if (project.clientId !== user.id) {
+      throw new ForbiddenException("You can only access documents for your own projects");
+    }
   }
 
   private extractFileKeyFromUrl(fileUrl: string): string {

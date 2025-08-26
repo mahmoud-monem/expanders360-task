@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Pagination } from "nestjs-typeorm-paginate";
-import { Repository } from "typeorm";
+import { Equal, Repository } from "typeorm";
 
 import { Country } from "../country/entities/country.entity";
 import { Match } from "../match/entities/match.entity";
@@ -9,6 +9,8 @@ import { MatchService } from "../match/match.service";
 import { NotificationService } from "../notification/notification.service";
 import { ProjectStatus } from "../project/constants/project-status.enum";
 import { ServiceType } from "../project/constants/service-type.enum";
+import { UserRole } from "../user/constants/user-role.enum";
+import { User } from "../user/entities/user.entity";
 import { Vendor } from "../vendor/entities/vendor.entity";
 import { VendorService } from "../vendor/vendor.service";
 import { CreateProjectDto } from "./dtos/create-project.dto";
@@ -29,7 +31,7 @@ export class ProjectService {
 
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
     const country = await this.countryRepository.findOne({
-      where: { id: createProjectDto.countryId },
+      where: { id: Equal(createProjectDto.countryId) },
     });
 
     if (!country) {
@@ -41,7 +43,13 @@ export class ProjectService {
     return this.projectRepository.save(project);
   }
 
-  async getProjectsPaginatedList(query: GetProjectsPaginatedListQueryDto): Promise<Pagination<Project>> {
+  async getProjectsPaginatedList(query: GetProjectsPaginatedListQueryDto, user?: User): Promise<Pagination<Project>> {
+    if (user && user.role === UserRole.Client) {
+      if (!query.filters) {
+        query.filters = {};
+      }
+      query.filters.clientId = user.id;
+    }
     return this.projectRepository.getProjectsPaginatedList(query);
   }
 
@@ -58,8 +66,14 @@ export class ProjectService {
     });
   }
 
-  async getProjectDetails(id: number): Promise<Project> {
-    return this.validateProjectExistence(id);
+  async getProjectDetails(id: number, user?: User): Promise<Project> {
+    const project = await this.validateProjectExistence(id);
+
+    if (user && user.role === UserRole.Client && project.clientId !== user.id) {
+      throw new ForbiddenException("You can only access your own projects");
+    }
+
+    return project;
   }
 
   async findOne(id: number): Promise<Project> {
@@ -75,8 +89,12 @@ export class ProjectService {
     return project;
   }
 
-  async update(id: number, updateProjectDto: UpdateProjectDto): Promise<Project> {
+  async update(id: number, updateProjectDto: UpdateProjectDto, user?: User): Promise<Project> {
     const project = await this.validateProjectExistence(id);
+
+    if (user && user.role === UserRole.Client && project.clientId !== user.id) {
+      throw new ForbiddenException("You can only update your own projects");
+    }
 
     if (updateProjectDto.countryId) {
       const country = await this.countryRepository.findOne({
@@ -93,16 +111,24 @@ export class ProjectService {
     return this.projectRepository.save(project);
   }
 
-  async remove(id: number): Promise<{ message: string }> {
-    await this.validateProjectExistence(id);
+  async remove(id: number, user?: User): Promise<{ message: string }> {
+    const project = await this.validateProjectExistence(id);
+
+    if (user && user.role === UserRole.Client && project.clientId !== user.id) {
+      throw new ForbiddenException("You can only delete your own projects");
+    }
 
     await this.projectRepository.delete(id);
 
     return { message: "Project deleted successfully" };
   }
 
-  async rebuildMatches(projectId: number): Promise<{ message: string; matches: Match[]; totalMatches: number }> {
+  async rebuildMatches(projectId: number, user?: User): Promise<{ message: string; matches: Match[]; totalMatches: number }> {
     const project = await this.validateProjectExistence(projectId);
+
+    if (user && user.role === UserRole.Client && project.clientId !== user.id) {
+      throw new ForbiddenException("You can only rebuild matches for your own projects");
+    }
 
     const matchingVendors = await this.vendorService.findVendorsForMatching(project.countryId, project.neededServices);
 

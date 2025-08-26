@@ -5,6 +5,7 @@ import { UserRole } from "../../user/constants/user-role.enum";
 
 export class RegisterDto {
   @ApiProperty({
+    type: String,
     description: "The name of the user",
     example: "John Doe",
   })
@@ -13,6 +14,7 @@ export class RegisterDto {
   name: string;
 
   @ApiProperty({
+    type: String,
     description: "The email of the user",
     example: "john.doe@example.com",
   })
@@ -30,8 +32,9 @@ export class RegisterDto {
   password: string;
 
   @ApiProperty({
+    type: String,
     description: "The role of the user",
-    example: UserRole.Admin,
+    example: UserRole.Client,
   })
   @IsEnum(UserRole)
   @IsNotEmpty()

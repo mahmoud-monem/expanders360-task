@@ -13,12 +13,14 @@ import { TopVendorsAnalyticsResponseDto } from "./dtos/top-vendors-analytics.res
 @ApiTags("Analytics")
 @Controller("analytics")
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.Admin)
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
   @Get("top-vendors")
-  @ApiOperation({ summary: "Get top 3 vendors per country with research document counts" })
+  @Roles(UserRole.Admin, UserRole.Client)
+  @ApiOperation({
+    summary: "Get top 3 vendors per country with research document counts (Admin: full analytics, Client: read analytics)",
+  })
   @ApiOkResponse({ type: [TopVendorsAnalyticsResponseDto] })
   @Serialize(TopVendorsAnalyticsResponseDto)
   async getTopVendors() {
@@ -26,6 +28,8 @@ export class AnalyticsController {
   }
 
   @Get("vendor-performance/:vendorId")
+  @Roles(UserRole.Admin)
+  @ApiOperation({ summary: "Get vendor performance metrics (Admin only)" })
   async getVendorPerformance(@Param("vendorId") vendorId: string, @Query("days") days?: string) {
     const daysNumber = days ? parseInt(days, 10) : 30;
     return this.analyticsService.getVendorPerformanceMetrics(+vendorId, daysNumber);

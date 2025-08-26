@@ -1,7 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { InjectRepository } from "@nestjs/typeorm";
 import { Model } from "mongoose";
+import { Repository } from "typeorm";
 
+import { Project } from "../../project/entities/project.entity";
 import { GetResearchDocumentsPaginatedListQueryDto } from "../dtos/get-research-documents-paginated-list.query.dto";
 import { ResearchDocument, ResearchDocumentDocument } from "../schemas/research-document.schema";
 
@@ -18,7 +21,10 @@ export interface PaginatedResult<T> {
 
 @Injectable()
 export class ResearchDocumentRepository {
-  constructor(@InjectModel(ResearchDocument.name) private researchDocumentModel: Model<ResearchDocumentDocument>) {}
+  constructor(
+    @InjectModel(ResearchDocument.name) private researchDocumentModel: Model<ResearchDocumentDocument>,
+    @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
+  ) {}
 
   async getResearchDocumentDetails(id: string): Promise<ResearchDocument | null> {
     return this.researchDocumentModel.findById(id).exec();
@@ -26,6 +32,7 @@ export class ResearchDocumentRepository {
 
   async getResearchDocumentsPaginatedList(
     query: GetResearchDocumentsPaginatedListQueryDto,
+    clientId?: number,
   ): Promise<PaginatedResult<ResearchDocument>> {
     const { page = 1, limit = 10, search, filters } = query;
     const skip = (page - 1) * limit;
@@ -34,6 +41,31 @@ export class ResearchDocumentRepository {
 
     if (filters.projectId) {
       mongoQuery.projectId = filters.projectId;
+    }
+
+    // If clientId is provided, filter documents to only those from client's projects
+    if (clientId) {
+      const clientProjects = await this.projectRepository.find({
+        where: { clientId },
+        select: ["id"],
+      });
+      const projectIds = clientProjects.map(p => p.id);
+
+      if (projectIds.length === 0) {
+        // Client has no projects, return empty result
+        return {
+          items: [],
+          meta: {
+            totalItems: 0,
+            itemCount: 0,
+            itemsPerPage: limit,
+            totalPages: 0,
+            currentPage: page,
+          },
+        };
+      }
+
+      mongoQuery.projectId = { $in: projectIds };
     }
 
     if (filters.tags && filters.tags.length > 0) {
